@@ -32,15 +32,15 @@ public class UseAStream {
 //    }
 //  }
 
-
-  public static Optional<Stream<String>> getStreamFromFile(String fn) {
-    try {
-      return Optional.of(Files.lines(Path.of(fn)));
-    } catch (IOException ioe){
-      System.err.println("it broke: " + ioe.getMessage());
-      return Optional.empty();
-    }
-  }
+//
+//  public static Optional<Stream<String>> getStreamFromFile(String fn) {
+//    try {
+//      return Optional.of(Files.lines(Path.of(fn)));
+//    } catch (IOException ioe){
+//      System.err.println("it broke: " + ioe.getMessage());
+//      return Optional.empty();
+//    }
+//  }
 
   public static void processError(Optional<?> opt) {
     if (opt.isEmpty()) {
@@ -56,8 +56,9 @@ public class UseAStream {
 
 //        .flatMap(fn -> UseAStream.getStreamFromFile(fn))
 
-        .map(fn -> UseAStream.getStreamFromFile(fn))
+//        .map(fn -> UseAStream.getStreamFromFile(fn))
 
+        .map(ExFunction.wrap(fn -> Files.lines(Path.of(fn))))
         .peek(opt -> UseAStream.processError(opt))
         .filter(opt -> opt.isPresent())
         .flatMap(opt -> opt.get())
