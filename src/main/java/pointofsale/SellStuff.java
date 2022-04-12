@@ -16,6 +16,30 @@ class ModemSupport {
   }
 }
 
+class NoMoneyException extends Exception {}
+class StolenCardException extends Exception {}
+// might simply use IOException for "Infrastructure Failure"
+class InfrastructureException extends Exception {
+  public InfrastructureException() {
+  }
+
+  public InfrastructureException(String message) {
+    super(message);
+  }
+
+  public InfrastructureException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public InfrastructureException(Throwable cause) {
+    super(cause);
+  }
+
+  public InfrastructureException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
+  }
+}
+
 /*
  * "could you just"...
  * "better" design if it "limits the consequences of change"
@@ -31,11 +55,29 @@ public class SellStuff {
   private static boolean useModem = false;
 
   static void chargeCreditCard(int price, int cardNumber)
-      throws ModemDidNotConnectException, IOException {
-    if (useModem) {
-      ModemSupport.dialNumber(12345);
-    } else {
-      Socket s = new Socket("127.0.0.1", 1234);
+//      throws ModemDidNotConnectException, IOException {
+  throws InfrastructureException, NoMoneyException, StolenCardException {
+    try {
+      if (useModem) {
+        ModemSupport.dialNumber(12345);
+      } else {
+        Socket s = new Socket("127.0.0.1", 1234);
+      }
+//    } catch (ModemDidNotConnectException m) { // these two are duplicate
+//      throw new InfrastructureException(m);
+//    } catch (IOException i) {
+//      throw new InfrastructureException(i);
+//    } catch (Exception e) { BAD BAD BAD
+    } catch (ModemDidNotConnectException | IOException e) {
+      // e has type "nearest common ancestor"
+//      Exception f = e;
+//      throw f; // BAD, requires "throws Exception"
+
+//      throw e; // ok... even though this is type Exception, compiler
+//      // works out that it can only be MDNCE, or IOE, but ONLY
+//      // if e is final or effectively final
+
+      throw new InfrastructureException(e);
     }
   }
 
@@ -45,8 +87,9 @@ public class SellStuff {
       chargeCreditCard(1000, 12345);
       // ask for alternate means of payment -- here we have more
       // "resources" (e.g. human-interaction) or opportunities
-    } catch (ModemDidNotConnectException mdnce) {
+    } catch (InfrastructureException mdnce) {
 
-    }
+    } catch (StolenCardException sce) {}
+    catch (NoMoneyException nme) {}
   }
 }
